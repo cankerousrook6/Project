@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Books</title>
+</head>
+<body>
+
+<h1>Books</h1>
+
+<ul>
+    <#list books as book>
+
+    <li>
+        ${book.title}
+
+        <#if book.taken>
+        - issued
+        <#else>
+        - available
+    </#if>
+
+    </li>
+
+</#list>
+</ul>
+
+<a href="/book">Book</a>
+<br>
+<a href="/employee">Employee</a>
+
+</body>
+</html>

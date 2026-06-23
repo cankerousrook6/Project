@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<h1>${employee.fullName}</h1>
+
+<h2>Current books</h2>
+
+<ul>
+  <#list employee.currentBooks as book>
+  <li>${book.title}</li>
+</#list>
+</ul>
+
+<h2>Old books</h2>
+
+<ul>
+  <#list employee.oldBooks as book>
+  <li>${book.title}</li>
+</#list>
+</ul>
+
+<a href="/books">Back</a>
+
+</body>
+</html>
