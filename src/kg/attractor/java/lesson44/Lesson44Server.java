@@ -101,6 +101,20 @@ public class Lesson44Server extends BasicServer {
             String password = form.get("password");
             String name = form.get("name");
 
+            if (email == null || email.isBlank() ||
+            password == null || password.isBlank() ||
+            name == null || name.isBlank()) {
+
+                renderTemplate(exchange, "register.html", Map.of("error", "All fields are required"));
+                return;
+            }
+
+            if (userStorage.findByEmail(email) != null) {
+                renderTemplate(exchange, "register.html",
+                        Map.of("error", "User already exists"));
+                return;
+            }
+
             User user = new User(email, password, name);
             userStorage.addUser(user);
 
@@ -123,6 +137,13 @@ public class Lesson44Server extends BasicServer {
             String email = form.get("email");
             String password = form.get("user-password");
 
+            if (email == null || email.isBlank() ||
+            password == null || password.isBlank()) {
+
+                renderTemplate(exchange, "login.html", Map.of("error", "Enter email and password"));
+                return;
+            }
+
             User user = userStorage.findUser(email, password);
 
             if (user == null) {
@@ -141,15 +162,11 @@ public class Lesson44Server extends BasicServer {
         User user = userStorage.getCurrentUser();
 
         if (user == null) {
-            try {
-                redirect303(exchange, "/login");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return;
+            user = new User("unknown@mail.com","none","Некий пользователь"
+            );
         }
-
-        renderTemplate(exchange, "profile.html", Map.of("user", user));
+        renderTemplate(exchange, "profile.html", Map.of("user", user)
+        );
     }
 
     private String getBody(HttpExchange exchange) throws IOException {
