@@ -8,12 +8,17 @@ import freemarker.template.TemplateExceptionHandler;
 import kg.attractor.java.server.BasicServer;
 import kg.attractor.java.server.ContentType;
 import kg.attractor.java.server.ResponseCodes;
+import lesson45.User;
+import lesson45.UserStorage;
+import lesson45.Utils;
 
 import java.io.*;
+import java.util.Map;
 
 public class Lesson44Server extends BasicServer {
     private final static Configuration freemarker = initFreeMarker();
     private final LibraryDataModel libraryDataModel = new LibraryDataModel();
+    private final UserStorage userStorage = new UserStorage();
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
@@ -21,6 +26,11 @@ public class Lesson44Server extends BasicServer {
         registerGet("/books", this::booksHandler);
         registerGet("/book", this::bookHandler);
         registerGet("/employee", this::employeeHandler);
+        registerGet("/register", this::registerPage);
+        registerPost("/register", this::registerPost);
+        registerGet("/login", this::loginPage);
+        registerPost("/login", this::loginPost);
+        registerGet("/profile", this::profilePage);
     }
 
     private static Configuration initFreeMarker() {
@@ -76,5 +86,80 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void employeeHandler(HttpExchange exchange) {renderTemplate(exchange,"employee.html", libraryDataModel);
+    }
+
+    private void registerPage(HttpExchange exchange) {
+        renderTemplate(exchange, "register.html", Map.of());
+    }
+
+    private void registerPost(HttpExchange exchange) {
+        try {
+            String body = getBody(exchange);
+            Map<String, String> form = Utils.parseUrlEncoded(body);
+
+            String email = form.get("email");
+            String password = form.get("password");
+            String name = form.get("name");
+
+            User user = new User(email, password, name);
+            userStorage.addUser(user);
+
+            redirect303(exchange, "/profile");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loginPage(HttpExchange exchange) {
+        renderTemplate(exchange, "login.html", Map.of());
+    }
+
+    private void loginPost(HttpExchange exchange) {
+        try {
+            String body = getBody(exchange);
+            Map<String, String> form = Utils.parseUrlEncoded(body);
+
+            String email = form.get("email");
+            String password = form.get("user-password");
+
+            User user = userStorage.findUser(email, password);
+
+            if (user == null) {
+                renderTemplate(exchange, "login.html", Map.of("error", "Wrong email or password"));
+                return;
+            }
+            userStorage.setCurrentUser(user);
+            redirect303(exchange, "/profile");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void profilePage(HttpExchange exchange) {
+        User user = userStorage.getCurrentUser();
+
+        if (user == null) {
+            try {
+                redirect303(exchange, "/login");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        renderTemplate(exchange, "profile.html", Map.of("user", user));
+    }
+
+    private String getBody(HttpExchange exchange) throws IOException {
+        return new String(exchange.getRequestBody().readAllBytes());
+    }
+
+    private void redirect303(HttpExchange exchange, String location)
+            throws IOException {
+        exchange.getResponseHeaders().add("Location", location);
+        exchange.sendResponseHeaders(303, -1);
+        exchange.close();
     }
 }
