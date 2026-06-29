@@ -14,7 +14,7 @@
     <li>
         ${book.title}
 
-        <#if book.taken>
+        <#if !book.available>
         - issued
         <#else>
         - available

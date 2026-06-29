@@ -1,0 +1,49 @@
+{
+  "books": [
+    {
+      "id": "1",
+      "title": "Clean Code",
+      "author": "Robert Martin",
+      "year": 2008,
+      "available": false,
+      "image": "1.jpg"
+    },
+    {
+      "id": "2",
+      "title": "Java Core",
+      "author": "Cay Horstmann",
+      "year": 2021,
+      "available": true,
+      "image": "1.jpg"
+    }
+  ],
+  "employees": [
+    {
+      "id": "1",
+      "firstName": "Vladislav",
+      "lastName": "Ivanov",
+      "history": {
+        "currentBooks": [
+          {
+            "id": "1",
+            "title": "Clean Code",
+            "author": "Robert Martin",
+            "year": 2008,
+            "available": false,
+            "image": "1.jpg"
+          }
+        ],
+        "oldBooks": [
+          {
+            "id": "2",
+            "title": "Java Core",
+            "author": "Cay Horstmann",
+            "year": 2021,
+            "available": true,
+            "image": "1.jpg"
+          }
+        ]
+      }
+    }
+  ]
+}

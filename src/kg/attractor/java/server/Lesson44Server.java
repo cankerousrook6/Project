@@ -1,13 +1,14 @@
-package kg.attractor.java.lesson44;
+package kg.attractor.java.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
-import kg.attractor.java.server.BasicServer;
-import kg.attractor.java.server.ContentType;
-import kg.attractor.java.server.ResponseCodes;
+import kg.attractor.java.lesson44.model.Book;
+import kg.attractor.java.lesson44.model.Employee;
+import kg.attractor.java.lesson44.model.LibraryDataModel;
+import kg.attractor.java.lesson44.storage.LibraryJsonStorage;
 import lesson45.User;
 import lesson45.UserStorage;
 import lesson45.Utils;
@@ -17,12 +18,11 @@ import java.util.Map;
 
 public class Lesson44Server extends BasicServer {
     private final static Configuration freemarker = initFreeMarker();
-    private final LibraryDataModel libraryDataModel = new LibraryDataModel();
+    private final LibraryDataModel libraryDataModel = new LibraryJsonStorage().load();
     private final UserStorage userStorage = new UserStorage();
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
-        registerGet("/sample", this::freemarkerSampleHandler);
         registerGet("/books", this::booksHandler);
         registerGet("/book", this::bookHandler);
         registerGet("/employee", this::employeeHandler);
@@ -49,10 +49,6 @@ public class Lesson44Server extends BasicServer {
         }
     }
 
-    private void freemarkerSampleHandler(HttpExchange exchange) {
-        renderTemplate(exchange, "sample.html", getSampleDataModel());
-    }
-
     protected void renderTemplate(HttpExchange exchange, String templateFile, Object dataModel) {
         try {
 
@@ -74,18 +70,18 @@ public class Lesson44Server extends BasicServer {
         }
     }
 
-    private SampleDataModel getSampleDataModel() {
-        return new SampleDataModel();
-    }
-
     private void booksHandler(HttpExchange exchange) {
         renderTemplate(exchange, "books.html", libraryDataModel);
     }
 
-    private void bookHandler(HttpExchange exchange) {renderTemplate(exchange, "book.html", libraryDataModel);
+    private void bookHandler(HttpExchange exchange) {
+        Book book = libraryDataModel.getBooks().get(0);
+        renderTemplate(exchange, "book.html", Map.of("book", book));
     }
 
-    private void employeeHandler(HttpExchange exchange) {renderTemplate(exchange,"employee.html", libraryDataModel);
+    private void employeeHandler(HttpExchange exchange) {
+        Employee employee = libraryDataModel.getEmployees().get(0);
+        renderTemplate(exchange,"employee.html", Map.of("employee", employee));
     }
 
     private void registerPage(HttpExchange exchange) {
