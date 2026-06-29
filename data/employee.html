@@ -5,12 +5,12 @@
 </head>
 <body>
 
-<h1>${employee.fullName}</h1>
+<h1>${employee.firstName} ${employee.lastName}</h1>
 
 <h2>Current books</h2>
 
 <ul>
-  <#list employee.currentBooks as book>
+  <#list employee.history.currentBooks as book>
   <li>${book.title}</li>
 </#list>
 </ul>
@@ -18,7 +18,7 @@
 <h2>Old books</h2>
 
 <ul>
-  <#list employee.oldBooks as book>
+  <#list employee.history.oldBooks as book>
   <li>${book.title}</li>
 </#list>
 </ul>
