@@ -36,6 +36,7 @@ public class Lesson44Server extends BasicServer {
         registerGet("/profile", this::profilePage);
         registerGet("/take-book", this::takeBook);
         registerGet("/return-book", this::returnBook);
+        registerGet("/logout", this::logout);
     }
 
     private static Configuration initFreeMarker() {
@@ -307,5 +308,20 @@ public class Lesson44Server extends BasicServer {
             }
         }
         return null;
+    }
+
+    private void logout(HttpExchange exchange) throws IOException {
+        String cookieString = exchange.getRequestHeaders().getFirst("Cookie");
+        Map<String, String> cookies = Cookie.parse(cookieString);
+        String sessionId = cookies.get("sessionId");
+
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+        }
+        Cookie deleteCookie = Cookie.make("sessionId", "")
+                .setMaxAge(0)
+                .setHttpOnly(true);
+        setCookie(exchange, deleteCookie);
+        redirect303(exchange, "/login");
     }
 }
