@@ -14,16 +14,15 @@ import lesson45.UserStorage;
 import lesson45.Utils;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class Lesson44Server extends BasicServer {
     private final static Configuration freemarker = initFreeMarker();
     private final LibraryDataModel libraryDataModel = new LibraryJsonStorage().load();
     private final UserStorage userStorage = new UserStorage();
     private final Map<String, User> sessions = new HashMap<>();
+    private final Map<String, List<Book>> userBooks = new HashMap<>();
+    private final Map<String, String> bookOwners = new HashMap<>();
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
@@ -35,6 +34,8 @@ public class Lesson44Server extends BasicServer {
         registerGet("/login", this::loginPage);
         registerPost("/login", this::loginPost);
         registerGet("/profile", this::profilePage);
+        registerGet("/take-book", this::takeBook);
+        registerGet("/return-book", this::returnBook);
     }
 
     private static Configuration initFreeMarker() {
@@ -78,14 +79,28 @@ public class Lesson44Server extends BasicServer {
         renderTemplate(exchange, "books.html", libraryDataModel);
     }
 
-    private void bookHandler(HttpExchange exchange) {
-        Book book = libraryDataModel.getBooks().get(0);
+    private void bookHandler(HttpExchange exchange) throws IOException {
+        Map<String, String> query = Utils.parseUrlEncoded(exchange.getRequestURI().getQuery());
+        String bookId = query.get("id");
+        Book book = findBookById(bookId);
+        if (book == null) {
+            redirect303(exchange, "/books");
+            return;
+        }
         renderTemplate(exchange, "book.html", Map.of("book", book));
     }
 
-    private void employeeHandler(HttpExchange exchange) {
-        Employee employee = libraryDataModel.getEmployees().get(0);
-        renderTemplate(exchange,"employee.html", Map.of("employee", employee));
+    private void employeeHandler(HttpExchange exchange) throws IOException {
+        User user = getAuthorizedUser(exchange);
+        if (user == null) {
+            redirect303(exchange, "/login");
+            return;
+        }
+        List<Book> currentBooks = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+        Map<String, Object> data = new HashMap<>();
+        data.put("user", user);
+        data.put("currentBooks", currentBooks);
+        renderTemplate(exchange, "employee.html", data);
     }
 
     private void registerPage(HttpExchange exchange) {
@@ -213,5 +228,84 @@ public class Lesson44Server extends BasicServer {
 
     private void setCookie(HttpExchange exchange, Cookie cookie) {
         exchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
+    }
+
+    private User getAuthorizedUser(HttpExchange exchange) {
+        Map<String, String> cookies = getCookies(exchange);
+        String sessionId = cookies.get("sessionId");
+
+        if (sessionId == null) {
+            return null;
+        }
+
+        return sessions.get(sessionId);
+    }
+
+    private void takeBook(HttpExchange exchange) throws IOException {
+        User user = getAuthorizedUser(exchange);
+        if (user == null) {
+            redirect303(exchange, "/login");
+            return;
+        }
+
+        Map<String, String> query = Utils.parseUrlEncoded(exchange.getRequestURI().getQuery());
+        String bookId = query.get("id");
+        Book book = findBookById(bookId);
+        if (book == null || !book.isAvailable()) {
+            redirect303(exchange, "/books");
+            return;
+        }
+
+        List<Book> books = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+        if (books.size() >= 2) {
+            redirect303(exchange, "/books");
+            return;
+        }
+        books.add(book);
+        userBooks.put(user.getEmail(), books);
+        bookOwners.put(book.getId(), user.getEmail());
+        book.setAvailable(false);
+        redirect303(exchange, "/books");
+    }
+
+    private void returnBook(HttpExchange exchange) throws IOException {
+        User user = getAuthorizedUser(exchange);
+
+        if (user == null) {
+            redirect303(exchange, "/login");
+            return;
+        }
+        Map<String, String> query = Utils.parseUrlEncoded(exchange.getRequestURI().getQuery());
+        String bookId = query.get("id");
+        Book book = findBookById(bookId);
+
+        if (book == null) {
+            redirect303(exchange, "/books");
+            return;
+        }
+        String ownerEmail = bookOwners.get(book.getId());
+        if (!user.getEmail().equals(ownerEmail)) {
+            redirect303(exchange, "/books");
+            return;
+        }
+
+        List<Book> books = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+        books.removeIf(userBook -> userBook.getId().equals(book.getId()));
+        bookOwners.remove(book.getId());
+        book.setAvailable(true);
+        redirect303(exchange, "/books");
+    }
+
+    private Book findBookById(String id) {
+        if (id == null) {
+            return null;
+        }
+
+        for (Book book : libraryDataModel.getBooks()) {
+            if (id.equals(book.getId())) {
+                return book;
+            }
+        }
+        return null;
     }
 }
