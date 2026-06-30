@@ -36,6 +36,7 @@ public class Lesson44Server extends BasicServer {
         registerGet("/profile", this::profilePage);
         registerGet("/take-book", this::takeBook);
         registerGet("/return-book", this::returnBook);
+        registerGet("/logout", this::logout);
     }
 
     private static Configuration initFreeMarker() {
@@ -186,17 +187,12 @@ public class Lesson44Server extends BasicServer {
         }
     }
 
-    private void profilePage(HttpExchange exchange) {
-        Map<String, String> cookies = getCookies(exchange);
-        String sessionId = cookies.get("sessionId");
-
-        User user = null;
-        if (sessionId != null) {
-            user = sessions.get(sessionId);
-        }
+    private void profilePage(HttpExchange exchange) throws IOException {
+        User user = getAuthorizedUser(exchange);
 
         if (user == null) {
-            user = new User("unknown@mail.com", "none", "Некий пользователь");
+            redirect303(exchange, "/login");
+            return;
         }
         renderTemplate(exchange, "profile.html", Map.of("user", user));
     }
@@ -307,5 +303,20 @@ public class Lesson44Server extends BasicServer {
             }
         }
         return null;
+    }
+
+    private void logout(HttpExchange exchange) throws IOException {
+        String cookieString = exchange.getRequestHeaders().getFirst("Cookie");
+        Map<String, String> cookies = Cookie.parse(cookieString);
+        String sessionId = cookies.get("sessionId");
+
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+        }
+        Cookie deleteCookie = Cookie.make("sessionId", "")
+                .setMaxAge(0)
+                .setHttpOnly(true);
+        setCookie(exchange, deleteCookie);
+        redirect303(exchange, "/login");
     }
 }
