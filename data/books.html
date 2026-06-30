@@ -12,7 +12,7 @@
     <#list books as book>
 
     <li>
-        ${book.title}
+        <a href="/book?id=${book.id}">${book.title}</a>
 
         <#if !book.available>
         - issued
@@ -25,8 +25,6 @@
 </#list>
 </ul>
 
-<a href="/book">Book</a>
-<br>
 <a href="/employee">Employee</a>
 
 </body>

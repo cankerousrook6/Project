@@ -2,23 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <title>Employee</title>
 </head>
 <body>
 
-<h1>${employee.firstName} ${employee.lastName}</h1>
+<h1>${user.name}</h1>
 
 <h2>Current books</h2>
-
 <ul>
-  <#list employee.history.currentBooks as book>
-  <li>${book.title}</li>
-</#list>
-</ul>
-
-<h2>Old books</h2>
-
-<ul>
-  <#list employee.history.oldBooks as book>
+  <#list currentBooks as book>
   <li>${book.title}</li>
 </#list>
 </ul>
