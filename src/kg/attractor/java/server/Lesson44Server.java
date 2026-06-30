@@ -14,12 +14,16 @@ import lesson45.UserStorage;
 import lesson45.Utils;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class Lesson44Server extends BasicServer {
     private final static Configuration freemarker = initFreeMarker();
     private final LibraryDataModel libraryDataModel = new LibraryJsonStorage().load();
     private final UserStorage userStorage = new UserStorage();
+    private final Map<String, User> sessions = new HashMap<>();
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
@@ -114,6 +118,12 @@ public class Lesson44Server extends BasicServer {
             User user = new User(email, password, name);
             userStorage.addUser(user);
 
+            String sessionId = UUID.randomUUID().toString();
+            sessions.put(sessionId, user);
+            Cookie sessionCookie = Cookie.make("sessionId", sessionId)
+                    .setMaxAge(600)
+                    .setHttpOnly(true);
+            setCookie(exchange, sessionCookie);
             redirect303(exchange, "/profile");
 
         } catch (IOException e) {
@@ -146,7 +156,14 @@ public class Lesson44Server extends BasicServer {
                 renderTemplate(exchange, "login.html", Map.of("error", "Wrong email or password"));
                 return;
             }
-            userStorage.setCurrentUser(user);
+
+            String sessionId = UUID.randomUUID().toString();
+            sessions.put(sessionId, user);
+
+            Cookie sessionCookie = Cookie.make("sessionId", sessionId)
+                    .setMaxAge(600)
+                    .setHttpOnly(true);
+            setCookie(exchange, sessionCookie);
             redirect303(exchange, "/profile");
 
         } catch (IOException e) {
@@ -155,14 +172,18 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void profilePage(HttpExchange exchange) {
-        User user = userStorage.getCurrentUser();
+        Map<String, String> cookies = getCookies(exchange);
+        String sessionId = cookies.get("sessionId");
+
+        User user = null;
+        if (sessionId != null) {
+            user = sessions.get(sessionId);
+        }
 
         if (user == null) {
-            user = new User("unknown@mail.com","none","Некий пользователь"
-            );
+            user = new User("unknown@mail.com", "none", "Некий пользователь");
         }
-        renderTemplate(exchange, "profile.html", Map.of("user", user)
-        );
+        renderTemplate(exchange, "profile.html", Map.of("user", user));
     }
 
     private String getBody(HttpExchange exchange) throws IOException {
@@ -174,5 +195,23 @@ public class Lesson44Server extends BasicServer {
         exchange.getResponseHeaders().add("Location", location);
         exchange.sendResponseHeaders(303, -1);
         exchange.close();
+    }
+
+    private String getCookieString(HttpExchange exchange) {
+        return exchange.getRequestHeaders()
+                .getOrDefault("Cookie", List.of(""))
+                .get(0);
+    }
+
+    private Map<String, String> getCookies(HttpExchange exchange) {
+        String cookieString = getCookieString(exchange);
+        if (cookieString == null || cookieString.isBlank()) {
+            return Map.of();
+        }
+        return Cookie.parse(cookieString);
+    }
+
+    private void setCookie(HttpExchange exchange, Cookie cookie) {
+        exchange.getResponseHeaders().add("Set-Cookie", cookie.toString());
     }
 }
