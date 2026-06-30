@@ -187,17 +187,12 @@ public class Lesson44Server extends BasicServer {
         }
     }
 
-    private void profilePage(HttpExchange exchange) {
-        Map<String, String> cookies = getCookies(exchange);
-        String sessionId = cookies.get("sessionId");
-
-        User user = null;
-        if (sessionId != null) {
-            user = sessions.get(sessionId);
-        }
+    private void profilePage(HttpExchange exchange) throws IOException {
+        User user = getAuthorizedUser(exchange);
 
         if (user == null) {
-            user = new User("unknown@mail.com", "none", "Некий пользователь");
+            redirect303(exchange, "/login");
+            return;
         }
         renderTemplate(exchange, "profile.html", Map.of("user", user));
     }
