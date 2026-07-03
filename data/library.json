@@ -3,26 +3,26 @@
     {
       "id": "1",
       "title": "Clean Code",
-      "author": "Robert Martin",
-      "year": 2008,
-      "available": true,
       "description": "Some description",
-      "image": "/images/clean-code.jpg"
+      "author": "Robert Martin",
+      "image": "/images/clean-code.jpg",
+      "ownerEmail": "vlad@mail.ru",
+      "available": false
     },
     {
       "id": "2",
       "title": "Java Core",
-      "author": "Cay Horstmann",
-      "year": 2021,
-      "available": true,
       "description": "Some description",
-      "image": "/images/java-core.jpg"
+      "author": "Cay Horstmann",
+      "image": "/images/java-core.jpg",
+      "ownerEmail": "vlad@mail.ru",
+      "available": false
     },
     {
       "id": "3",
       "title": "Effective Java",
-      "author": "Joshua Bloch",
       "description": "Some description",
+      "author": "Joshua Bloch",
       "image": "/images/effective-java.jpg",
       "available": true
     }
@@ -38,9 +38,8 @@
             "id": "1",
             "title": "Clean Code",
             "author": "Robert Martin",
-            "year": 2008,
-            "available": false,
-            "image": "1.jpg"
+            "image": "1.jpg",
+            "available": true
           }
         ],
         "oldBooks": [
@@ -48,9 +47,8 @@
             "id": "2",
             "title": "Java Core",
             "author": "Cay Horstmann",
-            "year": 2021,
-            "available": true,
-            "image": "1.jpg"
+            "image": "1.jpg",
+            "available": true
           }
         ]
       }

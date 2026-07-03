@@ -27,6 +27,7 @@ public class Lesson44Server extends BasicServer {
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
+        restoreBookOwners();
         registerGet("/books", this::booksHandler);
         registerGet("/book", this::bookHandler);
         registerGet("/employee", this::employeeHandler);
@@ -272,6 +273,8 @@ public class Lesson44Server extends BasicServer {
         userBooks.put(user.getEmail(), books);
         bookOwners.put(book.getId(), user.getEmail());
         book.setAvailable(false);
+        book.setOwnerEmail(user.getEmail());
+        new LibraryJsonStorage().save(libraryDataModel);
         redirect303(exchange, "/books");
     }
 
@@ -300,6 +303,8 @@ public class Lesson44Server extends BasicServer {
         books.removeIf(userBook -> userBook.getId().equals(book.getId()));
         bookOwners.remove(book.getId());
         book.setAvailable(true);
+        book.setOwnerEmail(null);
+        new LibraryJsonStorage().save(libraryDataModel);
         redirect303(exchange, "/books");
     }
 
@@ -329,5 +334,31 @@ public class Lesson44Server extends BasicServer {
                 .setHttpOnly(true);
         setCookie(exchange, deleteCookie);
         redirect303(exchange, "/login");
+    }
+
+    private void restoreBookOwners() {
+        for (Book book : libraryDataModel.getBooks()) {
+            if (!book.isAvailable() && book.getOwnerEmail() != null) {
+                bookOwners.put(book.getId(), book.getOwnerEmail());
+                List<Book> books = userBooks.getOrDefault(
+                        book.getOwnerEmail(),
+                        new ArrayList<>()
+                );
+
+                if (!books.contains(book)) {
+                    books.add(book);
+                }
+                userBooks.put(book.getOwnerEmail(), books);
+                List<Book> history = userBookHistory.getOrDefault(
+                        book.getOwnerEmail(),
+                        new ArrayList<>()
+                );
+
+                if (!history.contains(book)) {
+                    history.add(book);
+                }
+                userBookHistory.put(book.getOwnerEmail(), history);
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ public class Book {
     private String description;
     private String author;
     private String image;
+    private String ownerEmail;
     private boolean available;
 
     public String getId() {
@@ -25,6 +26,10 @@ public class Book {
     }
 
     public String getDescription() { return description; }
+
+    public String getOwnerEmail() { return ownerEmail; }
+
+    public void setOwnerEmail(String ownerEmail) { this.ownerEmail = ownerEmail; }
 
     public boolean isAvailable() {
         return available;
