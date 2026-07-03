@@ -22,6 +22,7 @@ public class Lesson44Server extends BasicServer {
     private final UserStorage userStorage = new UserStorage();
     private final Map<String, User> sessions = new HashMap<>();
     private final Map<String, List<Book>> userBooks = new HashMap<>();
+    private final Map<String, List<Book>> userBookHistory = new HashMap<>();
     private final Map<String, String> bookOwners = new HashMap<>();
 
     public Lesson44Server(String host, int port) throws IOException {
@@ -195,7 +196,7 @@ public class Lesson44Server extends BasicServer {
             return;
         }
 
-        List<Book> books = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+        List<Book> books = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
         renderTemplate(exchange, "profile.html", Map.of("user", user, "books", books));
     }
 
@@ -260,6 +261,14 @@ public class Lesson44Server extends BasicServer {
             return;
         }
         books.add(book);
+
+        List<Book> history = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+
+        if (!history.contains(book)) {
+            history.add(book);
+        }
+
+        userBookHistory.put(user.getEmail(), history);
         userBooks.put(user.getEmail(), books);
         bookOwners.put(book.getId(), user.getEmail());
         book.setAvailable(false);
