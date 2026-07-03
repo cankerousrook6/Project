@@ -10,6 +10,9 @@
 <main>
   <form action="/register" method="post">
     <fieldset>
+      <#if error??>
+      <p style="color: red;">${error}</p>
+      </#if>
       <div class="legend">
         <p>Register</p>
       </div>
