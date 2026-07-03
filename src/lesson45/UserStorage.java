@@ -74,4 +74,8 @@ public class UserStorage {
             e.printStackTrace();
         }
     }
+
+    public List<User> getUsers() {
+        return users;
+    }
 }

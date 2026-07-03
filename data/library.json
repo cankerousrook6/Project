@@ -6,7 +6,7 @@
       "description": "Some description",
       "author": "Robert Martin",
       "image": "/images/clean-code.jpg",
-      "ownerEmail": "vlad@mail.ru",
+      "ownerEmail": "karina@mail.ru",
       "available": false
     },
     {
@@ -24,7 +24,8 @@
       "description": "Some description",
       "author": "Joshua Bloch",
       "image": "/images/effective-java.jpg",
-      "available": true
+      "ownerEmail": "karina@mail.ru",
+      "available": false
     }
   ],
   "employees": [

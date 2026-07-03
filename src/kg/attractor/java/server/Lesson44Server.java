@@ -94,16 +94,20 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void employeeHandler(HttpExchange exchange) throws IOException {
-        User user = getAuthorizedUser(exchange);
-        if (user == null) {
-            redirect303(exchange, "/login");
-            return;
+        List<Map<String, Object>> employees = new ArrayList<>();
+
+        for (User user : userStorage.getUsers()) {
+            List<Book> currentBooks = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+            List<Book> historyBooks = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+
+            Map<String, Object> employee = new HashMap<>();
+            employee.put("user", user);
+            employee.put("currentBooks", currentBooks);
+            employee.put("historyBooks", historyBooks);
+            employees.add(employee);
         }
-        List<Book> currentBooks = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
-        Map<String, Object> data = new HashMap<>();
-        data.put("user", user);
-        data.put("currentBooks", currentBooks);
-        renderTemplate(exchange, "employee.html", data);
+        renderTemplate(exchange, "employee.html",
+                Map.of("employees", employees));
     }
 
     private void registerPage(HttpExchange exchange) {

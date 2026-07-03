@@ -18,7 +18,7 @@
 <p>Available</p>
 <p><a href="/take-book?id=${book.id}">Take book</a></p>
 <#else>
-<p>Issued</p>
+<p>Issued to: ${book.ownerEmail}</p>
 <p><a href="/return-book?id=${book.id}">Return book</a></p>
 </#if>
 
