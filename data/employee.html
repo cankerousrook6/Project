@@ -1,19 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Employee</title>
+  <title>Employees</title>
 </head>
 <body>
 
-<h1>${user.name}</h1>
+<h1>Employees</h1>
 
-<h2>Current books</h2>
+<#list employees as employee>
+<h2>${employee.user.name}</h2>
+<p>Email: ${employee.user.email}</p>
+
+<h3>Current books</h3>
 <ul>
-  <#list currentBooks as book>
+  <#list employee.currentBooks as book>
   <li>${book.title}</li>
+  <#else>
+  <li>No current books</li>
 </#list>
 </ul>
+
+<h3>All books history</h3>
+<ul>
+  <#list employee.historyBooks as book>
+  <li>${book.title}</li>
+  <#else>
+  <li>No books history</li>
+</#list>
+</ul>
+
+<hr>
+</#list>
 
 <a href="/books">Back</a>
 

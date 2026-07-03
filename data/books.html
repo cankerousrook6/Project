@@ -15,7 +15,7 @@
         <a href="/book?id=${book.id}">${book.title}</a>
 
         <#if !book.available>
-        - issued
+        - issued to ${book.ownerEmail}
         <#else>
         - available
     </#if>

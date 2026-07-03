@@ -19,6 +19,11 @@
       "email": "vlad@mail",
       "password": "123",
       "name": "vlad"
+    },
+    {
+      "email": "karina@mail.ru",
+      "password": "123",
+      "name": "karina"
     }
   ]
 }

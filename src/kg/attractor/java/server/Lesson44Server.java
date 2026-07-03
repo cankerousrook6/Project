@@ -22,10 +22,12 @@ public class Lesson44Server extends BasicServer {
     private final UserStorage userStorage = new UserStorage();
     private final Map<String, User> sessions = new HashMap<>();
     private final Map<String, List<Book>> userBooks = new HashMap<>();
+    private final Map<String, List<Book>> userBookHistory = new HashMap<>();
     private final Map<String, String> bookOwners = new HashMap<>();
 
     public Lesson44Server(String host, int port) throws IOException {
         super(host, port);
+        restoreBookOwners();
         registerGet("/books", this::booksHandler);
         registerGet("/book", this::bookHandler);
         registerGet("/employee", this::employeeHandler);
@@ -92,16 +94,20 @@ public class Lesson44Server extends BasicServer {
     }
 
     private void employeeHandler(HttpExchange exchange) throws IOException {
-        User user = getAuthorizedUser(exchange);
-        if (user == null) {
-            redirect303(exchange, "/login");
-            return;
+        List<Map<String, Object>> employees = new ArrayList<>();
+
+        for (User user : userStorage.getUsers()) {
+            List<Book> currentBooks = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+            List<Book> historyBooks = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+
+            Map<String, Object> employee = new HashMap<>();
+            employee.put("user", user);
+            employee.put("currentBooks", currentBooks);
+            employee.put("historyBooks", historyBooks);
+            employees.add(employee);
         }
-        List<Book> currentBooks = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
-        Map<String, Object> data = new HashMap<>();
-        data.put("user", user);
-        data.put("currentBooks", currentBooks);
-        renderTemplate(exchange, "employee.html", data);
+        renderTemplate(exchange, "employee.html",
+                Map.of("employees", employees));
     }
 
     private void registerPage(HttpExchange exchange) {
@@ -194,7 +200,9 @@ public class Lesson44Server extends BasicServer {
             redirect303(exchange, "/login");
             return;
         }
-        renderTemplate(exchange, "profile.html", Map.of("user", user));
+
+        List<Book> books = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+        renderTemplate(exchange, "profile.html", Map.of("user", user, "books", books));
     }
 
     private String getBody(HttpExchange exchange) throws IOException {
@@ -258,9 +266,19 @@ public class Lesson44Server extends BasicServer {
             return;
         }
         books.add(book);
+
+        List<Book> history = userBookHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+
+        if (!history.contains(book)) {
+            history.add(book);
+        }
+
+        userBookHistory.put(user.getEmail(), history);
         userBooks.put(user.getEmail(), books);
         bookOwners.put(book.getId(), user.getEmail());
         book.setAvailable(false);
+        book.setOwnerEmail(user.getEmail());
+        new LibraryJsonStorage().save(libraryDataModel);
         redirect303(exchange, "/books");
     }
 
@@ -289,6 +307,8 @@ public class Lesson44Server extends BasicServer {
         books.removeIf(userBook -> userBook.getId().equals(book.getId()));
         bookOwners.remove(book.getId());
         book.setAvailable(true);
+        book.setOwnerEmail(null);
+        new LibraryJsonStorage().save(libraryDataModel);
         redirect303(exchange, "/books");
     }
 
@@ -318,5 +338,31 @@ public class Lesson44Server extends BasicServer {
                 .setHttpOnly(true);
         setCookie(exchange, deleteCookie);
         redirect303(exchange, "/login");
+    }
+
+    private void restoreBookOwners() {
+        for (Book book : libraryDataModel.getBooks()) {
+            if (!book.isAvailable() && book.getOwnerEmail() != null) {
+                bookOwners.put(book.getId(), book.getOwnerEmail());
+                List<Book> books = userBooks.getOrDefault(
+                        book.getOwnerEmail(),
+                        new ArrayList<>()
+                );
+
+                if (!books.contains(book)) {
+                    books.add(book);
+                }
+                userBooks.put(book.getOwnerEmail(), books);
+                List<Book> history = userBookHistory.getOrDefault(
+                        book.getOwnerEmail(),
+                        new ArrayList<>()
+                );
+
+                if (!history.contains(book)) {
+                    history.add(book);
+                }
+                userBookHistory.put(book.getOwnerEmail(), history);
+            }
+        }
     }
 }

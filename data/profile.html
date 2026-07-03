@@ -14,10 +14,21 @@
   <p>Email: ${user.email}</p>
 
   <p>
-    <p>На будущее :)</p>
     <a href="/books">Books</a>
   </p>
+
+  <h2>Books history</h2>
+
+  <ul>
+    <#list books as book>
+    <li>${book.title} - ${book.author}</li>
+    <#else>
+    <li>No books yet</li>
+  </#list>
+  </ul>
+
   <p><a href="/logout">Logout</a></p>
+
 </main>
 </body>
 </html>
