@@ -6,7 +6,8 @@
       "author": "Robert Martin",
       "year": 2008,
       "available": true,
-      "image": "1.jpg"
+      "description": "Some description",
+      "image": "/images/clean-code.jpg"
     },
     {
       "id": "2",
@@ -14,13 +15,15 @@
       "author": "Cay Horstmann",
       "year": 2021,
       "available": true,
-      "image": "1.jpg"
+      "description": "Some description",
+      "image": "/images/java-core.jpg"
     },
     {
       "id": "3",
       "title": "Effective Java",
       "author": "Joshua Bloch",
-      "image": "1.jpg",
+      "description": "Some description",
+      "image": "/images/effective-java.jpg",
       "available": true
     }
   ],

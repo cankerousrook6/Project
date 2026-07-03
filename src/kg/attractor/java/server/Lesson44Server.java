@@ -194,7 +194,9 @@ public class Lesson44Server extends BasicServer {
             redirect303(exchange, "/login");
             return;
         }
-        renderTemplate(exchange, "profile.html", Map.of("user", user));
+
+        List<Book> books = userBooks.getOrDefault(user.getEmail(), new ArrayList<>());
+        renderTemplate(exchange, "profile.html", Map.of("user", user, "books", books));
     }
 
     private String getBody(HttpExchange exchange) throws IOException {
